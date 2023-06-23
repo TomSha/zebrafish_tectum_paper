@@ -1,5 +1,4 @@
-source("constants.R")
-source("functions/preprocess_functions.R")
+source("functions/1_preprocess_functions.R")
 
 preprocess_dat <- function(prefix){
 	
