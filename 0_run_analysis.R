@@ -5,6 +5,7 @@ library(gtools)
 
 source("1_preprocess.R")
 source("2_binarise_traces.R")
+source("3_calculate_MI.R")
 
 np <- import("numpy")
 
@@ -23,9 +24,11 @@ prefix<-"200122_F1_PVN0"
 user <- Sys.info()[names(Sys.info()) == "user"]
 main_directory <- paste("/media/", user, "/Samsung_T5/Stimulus_Barrage/", sep = "")
 
-preprocess_dat(prefix)
+run_analysis <- function(prefix){
+	preprocess_dat(prefix)
 
-binarise_traces(prefix)
+	binarise_traces(prefix)
 
-
+	calculate_MI(prefix)
+}
 
