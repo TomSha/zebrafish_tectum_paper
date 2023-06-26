@@ -48,8 +48,8 @@ calculate_MI <- function(prefix){
 	write.table(epoch_labels, file = paste(data_directory, "epoch_labels.dat", sep = ""), col.names = F, row.names = F)
 	saveRDS(norm_fits, paste(data_directory, "response_parametric_fits.RDS", sep=""))
 
-	saveRDS(MI_grat_shuffle, paste(data_directory, "MI_GRAT_shuffle", sep=""))
-	saveRDS(MI_dot_shuffle, paste(data_directory, "MI_DOT_shuffle", sep=""))
+	saveRDS(MI_grat_shuffle, paste(data_directory, "MI_GRAT_shuffle.RDS", sep=""))
+	saveRDS(MI_dot_shuffle, paste(data_directory, "MI_DOT_shuffle.RDS", sep=""))
 
 	write.table(MI_dot_thresh, paste(data_directory, "MI_dot_thresh.dat", sep=""))
 	write.table(MI_grat_thresh, paste(data_directory, "MI_grat_thresh.dat", sep=""))
