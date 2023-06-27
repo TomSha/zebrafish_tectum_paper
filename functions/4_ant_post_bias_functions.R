@@ -98,3 +98,36 @@ norm_cell_num <- function(bins, MI_thresh, NCC_thresh, n_bins = 10){
 		}
 		return(round(n_cells_norm))
 }
+
+########################################################################
+# Calculates the anterior-posterior bias index for the distribution of 
+# neurons across the tectum
+#
+# params:
+# model_output = the output of the hierarchical multinomial model
+#
+# returns: diff_prob = a list of matrices where each matrix gives the AP bias per experiment (experiment x subtype)
+########################################################################
+
+calculate_AP_bias <- function(model_output){
+
+	p <- lapply(model_output, "[[", "p")
+	n_stim <- length(model_output)
+	stim_names <- names(p)
+
+	# calculate the MAP estimate for each bin along the AP axis for every fish and subtype
+	map_p <- lapply(p, function(x) apply(x, c(1, 2, 3), map_estimate))
+
+	# sum the prob. mass for the anterior tectum (bins 1:5) and posterior tectum (bins 6:10) and calc the difference
+	diff_prob <- vector("list", n_stim)
+	names(diff_prob) <- stim_names
+
+	for(i in 1 : n_stim){
+		stim <- map_p[[i]]
+		ant_prob <- apply(stim, c(2, 3), function(x) sum(x[1 : 5]))
+		post_prob <- apply(stim, c(2, 3), function(x) sum(x[6 : 10]))
+		diff_prob[[i]] <- ant_prob - post_prob
+	}
+	
+	return(diff_prob)
+}
