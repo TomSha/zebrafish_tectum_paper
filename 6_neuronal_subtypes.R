@@ -2,6 +2,7 @@ library(partitions)
 source("functions/6_neuronal_subtypes_functions.R")
 
 
+
 find_subtypes <- function(prefix){
 	data_directory <- paste(main_directory,prefix,"/suite2p/combined/",sep="")
 	all_responses <- readRDS(paste(data_directory,"stimulus_reps.RDS",sep=""))
@@ -53,11 +54,11 @@ find_subtypes <- function(prefix){
 
 	# Any cell which is best described by two subsets, split them into two determined by their response selectivity i.e those that preferentially respond to subset A and those that preferentially respond to subset B
 	for(i in dot_clusters$model_2gauss){
-		dot_clusters$model_n[dot_clusters$model_n == i & dot_minus_selec] <-  i + length(dot_clusters$parti)
+		dot_clusters$model_n[dot_clusters$model_n == i & dot_minus_selec] <- i + length(dot_clusters$parti)
 	}
 
 	for(i in grat_clusters$model_2gauss){
-		grat_clusters$model_n[grat_clusters$model_n == i & grat_minus_selec] <-  i + length(grat_clusters$parti)
+		grat_clusters$model_n[grat_clusters$model_n == i & grat_minus_selec] <- i + length(grat_clusters$parti)
 	}
 
 
