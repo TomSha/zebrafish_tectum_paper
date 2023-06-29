@@ -9,7 +9,6 @@ AP_bias <- function(prefix_list){
 	n_exps <- length(prefix_list)
 
 	xy_bins_list <- vector("list", n_exps)
-	xy_bins_list0 <- vector("list", n_exps)
 
 	MI_dot_list <- vector("list", n_exps)
 	MI_grat_list <- vector("list", n_exps)
@@ -19,7 +18,6 @@ AP_bias <- function(prefix_list){
 
 	dot_model_n_list <- vector("list", n_exps)
 	grat_model_n_list <- vector("list", n_exps)
-	ldot_model_n_list <- vector("list", n_exps)
 
 	NCC_thresh_list <- vector("list", n_exps)
 
@@ -41,11 +39,6 @@ AP_bias <- function(prefix_list){
 		write.table(xy_bins_list[[i]], paste(data_directory, "xy_bins.dat", sep=""), col.names=F, row.names=F)
 
 	}
-
-
-	# Find which neurons have non_zero MI (MI_stim_thresh_list) and are visually responsive (NCC_thresh_list)
-	dot_thresh_list <- mapply(function(MI_thresh, NCC_thresh) MI_thresh & NCC_thresh, MI_dot_thresh_list, NCC_thresh_list)
-	grat_thresh_list <- mapply(function(MI_thresh, NCC_thresh) MI_thresh & NCC_thresh, MI_grat_thresh_list, NCC_thresh_list)
 
 	
 	# dot data
@@ -92,8 +85,8 @@ AP_bias <- function(prefix_list){
 		dir.create(paste(main_directory,"info_analysis/",sep=""))
 	}
 
-#	saveRDS(model_output,paste(main_directory,"info_analysis/",model_name,".RDS",sep=""))
-	saveRDS(dat, paste(main_directory,"info_analysis/",model_name,"_dat.RDS",sep=""))
+#	saveRDS(model_output,paste(main_directory,"info_analysis/multi_model.RDS",sep=""))
+	saveRDS(dat, paste(main_directory,"info_analysis/multi_model_dat.RDS",sep=""))
 	saveRDS(AP_bias, paste(main_directory,"info_analysis/ant_post_bias_all.RDS",sep=""))
 }
 

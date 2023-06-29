@@ -75,28 +75,38 @@ calculate_bins <- function(xy, angle = 25, n_bins = 10){
 #
 # params:
 # bins = a vector of integers specifying which bin a neuron is in
-# thresh = a logical vector which specifies whether a neuron has non-zero mutual information
+# MI_thresh = a logical vector which specifies whether a neuron has non-zero mutual information
 # NCC_thresh = a logical vector which specifies whether a neuron is visually responsive
-# n_bins = the number of bins (we don't find this automatically incase there are no neurons
-#          in some bins)
+# subtype_num = a numeric vector which specifies which subtype a neuron belongs to (optional)
+# n_bins = the number of bins (we don't find this automatically incase there are no neurons in some bins)
 # returns:
-# n_cells_norm = a vector of the normalised number of neurons per bin 
+# n_cells_norm = a matrix of the normalised number of neurons per bin (bin x subtype)
 ########################################################################
 
-norm_cell_num <- function(bins, MI_thresh, NCC_thresh, n_bins = 10){
+norm_cell_num <- function(bins, MI_thresh, NCC_thresh, subtype_num = NULL, n_bins = 10){
+	
+	if(is.null(subtype_num)) subtype_num <- rep(1, length(MI_thresh))
+
+	mat <- matrix(nrow = n_bins, ncol = max(subtype_num))
+
+	for(i in 1 : max(subtype_num)){
 
 		n_cells <- table(factor(bins[NCC_thresh], levels = 1:n_bins))
-		n_cells_MI <- bins[MI_thresh & NCC_thresh]
+		n_cells_MI <- bins[MI_thresh & NCC_thresh & subtype_num == i]
 		n_cells_MI <- table(factor(n_cells_MI, levels = 1:n_bins))
 		n_cells_norm <- n_cells_MI/n_cells
 		n_cells_norm[is.na(n_cells_norm)] <- 0
 
 		if(sum(n_cells_norm) == 0){
-			return(n_cells_norm)
+			mat[, i] <- n_cells_norm
 		}else{
 			n_cells_norm <- n_cells_norm / sum(n_cells_norm) * sum(n_cells_MI)
+			mat[, i] <- round(n_cells_norm)
 		}
-		return(round(n_cells_norm))
+
+	}
+
+		return(mat)
 }
 
 ########################################################################
@@ -131,3 +141,4 @@ calculate_AP_bias <- function(model_output){
 	
 	return(diff_prob)
 }
+
