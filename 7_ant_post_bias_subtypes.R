@@ -58,7 +58,7 @@ AP_bias_subtypes <- function(prefix_list){
 	n_marg <- dim(bins_grat_count)[3]
 	dat_grat <- list(bins_count = bins_grat_count, sample_size = sample_size, n_exp = n_exp, n_bin = n_bin, n_marg = n_marg)
 
-	# run model on dot and grating data
+	# run multinomial model
 	model_output_dot <- run_multi_model(dat_dot)
 	model_output_grat <- run_multi_model(dat_grat)
 	
@@ -66,8 +66,16 @@ AP_bias_subtypes <- function(prefix_list){
 
 	dat <- list(dot = dat_dot, grat = dat_grat)
 
+	AP_bias <- calculate_AP_bias(model_output)
+
+	if(!dir.exists(paste(main_directory,"info_analysis/",sep=""))){
+		dir.create(paste(main_directory,"info_analysis/",sep=""))
+	}
+
 	#saveRDS(model_output,paste(main_directory,"info_analysis/multi_model_subtype.RDS",sep=""))
 	saveRDS(dat,paste(main_directory,"info_analysis/multi_model_subtype_dat.RDS",sep=""))
+	saveRDS(AP_bias, paste(main_directory,"info_analysis/ant_post_bias_subtype.RDS",sep=""))
+
 }
 
 
