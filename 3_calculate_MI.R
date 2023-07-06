@@ -2,8 +2,8 @@ source("functions/3_MI_functions.R")
 
 # Here we calculate the mutual information for the stimulus and response to dots and gratings
 calculate_MI <- function(prefix){
-	data_directory<-paste(main_directory,prefix,"/suite2p/combined/",sep="")
-	timelog<-read.table(paste(main_directory,prefix,"/time_epoches.log",sep=""))
+	data_directory <- paste(main_directory,prefix,"/suite2p/combined/",sep="")
+	timelog <- read.table(paste(main_directory,prefix,"/time_epoches.log",sep=""))
 	traces <- np$load(paste(data_directory, "traces_norm.npy", sep = ""))
 
 	responses_split_list <- split_traces(timelog, traces, ac_freq)
