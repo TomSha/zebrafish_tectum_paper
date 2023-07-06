@@ -1,12 +1,12 @@
-## Spatial subdomains in the Optic Tectum for the encoding of visual information
+# Spatial subdomains in the Optic Tectum for the encoding of visual information
 
 This repository contains the code used in the analysis of [Shallcross et al 2023](https://www.biorxiv.org/content/10.1101/2023.05.15.540762v1)
 
-# Data Analysis
+## Data Analysis
 
 The analysis pipeline takes the output of 2photon imaging data which has been processed using [suite2p](https://suite2p.readthedocs.io/en/latest/#). There is also the option to input a binary mask to select subsets of the neurons. The mask should be the same dimensions as was used during 2photon imaging and saved as a tiff, with one mask per imaging plane.
 
-# Data structure
+## Data structure
 
 /path/to/data/experiment_1/suite2p/combined/suite2p_data
 /path/to/data/experiment_1/experiment_1_slice_i_mask.tiff
@@ -15,9 +15,10 @@ The analysis pipeline takes the output of 2photon imaging data which has been pr
 /path/to/data/experiment_2/experiment_2_slice_i_mask.tiff
 
 prefix_list <- c("experiment_1", "experiment_2")
+
 prefix <- prefix_list[1]
 
-# Pipeline
+## Pipeline
 
 0_run_analysis.R - runs the analysis pipeline
 
