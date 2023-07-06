@@ -5,7 +5,7 @@ options(mc.cores = parallel::detectCores())
 parallel:::setDefaultClusterOptions(setup_strategy = "sequential")
 
 source("functions/4_ant_post_bias_functions.R")
-source("functions/5_gaussian_process.R")
+source("functions/5_GP_functions.R")
 
 save_GP_fit <- function(prefix){
 
