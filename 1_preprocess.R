@@ -1,10 +1,9 @@
 source("functions/1_preprocess_functions.R")
 
-preprocess_dat <- function(prefix){
+preprocess_dat <- function(prefix, mask = T){
 	
 	# Load the data from output of suite2p
 
-	MIP_list <- vector("list", length = n_planes)
 	mask_list <- vector("list", length = n_planes)
 
 	data_directory <- paste(main_directory, prefix, "/suite2p/combined/", sep="")
@@ -13,8 +12,11 @@ preprocess_dat <- function(prefix){
 	is_cell_prob <- np$load(paste(data_directory, "/iscell.npy", sep=""), allow_pickle=T)[, 2]
 	
 	for(i in 1 : n_planes){
-		MIP_list[[i]] <- readTIFF(paste(main_directory, prefix, "/", prefix, "_slice", i, "_MIP.tif", sep=""))
-		mask_list[[i]] <- readTIFF(paste(main_directory, prefix, "/", prefix, "_slice", i, "_mask.tif", sep=""))
+		if(mask){
+			mask_list[[i]] <- readTIFF(paste(main_directory, prefix, "/", prefix, "_slice", i, "_mask.tif", sep=""))
+		}else{
+			mask_list[[i]] <- matrix(rep(1, n_pixels * n_pixels), ncol = n_pixels, nrow = n_pixels)
+		}
 	}
 
 	# extract relevant neurons for analysis 
