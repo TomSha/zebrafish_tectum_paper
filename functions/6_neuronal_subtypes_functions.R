@@ -4,11 +4,11 @@ PlotPrior <- function(mu0,tau0,alpha0,beta0,mur,tr,data=NULL){
 		f=apply(grid,1,function(x) x[2]^(alpha0-0.5)*exp(-x[2]/2*(tau0*(x[1]-mu0)^2+2*beta0))*beta0^alpha0/gamma(alpha0)*sqrt(tau0/2/pi))
 		f=f/sum(f)
 		layout(matrix(1:2,1))
-		image(x=mur,y=tr,z=matrix(f,length(mur)),col=gray.colors(1000))
+		image(x=mur,y=tr,z=matrix(f,length(mur)),col=gray.colors(1000),xlab = "mu", ylab="tau",cex.lab=2,cex.axis=2)
 		if(!is.null(data)) points(data[,1],data[,2],col="red")
 		contour(x=mur,y=tr,z=matrix(f,length(mur)),add=T)
 		#plot(tr,tr^(alpha0-0.5)*exp(-tr/2*(tau0*(mu0)^2+2*beta0))*beta0^alpha0/gamma(alpha0)*sqrt(tau0/2/pi),type='l',ylab="P(t|m=0)")
-		plot(tr,dgamma(tr,alpha0,beta0),type='l',ylab="P(t)")
+		plot(tr,dgamma(tr,alpha0,beta0),type='l',ylab="P(tau)",xlab="tau",cex.lab=2,cex.axis=2)
 
 }
 
