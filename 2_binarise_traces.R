@@ -32,4 +32,6 @@ binarise_traces <- function(prefix){
 	write.table(corr$threshMean, paste(data_directory, "corvec_thresh.dat", sep = ""), row.names = F, col.names = F)
 	write.table(corr$threshSD, paste(data_directory, "corvec_threshSD.dat", sep = ""), row.names = F, col.names = F)
 	write.table(corr$thresh, paste(data_directory, "NCC_thresh.dat", sep = ""), row.names = F, col.names = F)
+	write.table(spikes, paste(data_directory, "spikes.dat", sep = ""), row.names = F, col.names = F)
 }
+
