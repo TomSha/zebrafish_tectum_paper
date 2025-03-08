@@ -11,6 +11,7 @@ source("5_gaussian_process.R")
 source("6_neuronal_subtypes.R")
 source("7_ant_post_bias_subtypes.R")
 source("8_linear_regression.R")
+source("9_quantify_baseline.R")
 
 np <- import("numpy")
 
@@ -56,5 +57,11 @@ run_analysis <- function(prefix_list){
 		
 	AP_bias_subtypes(prefix_list)	# 7
 	save_hier_lin_reg(prefix_list)	# 8
+
+	for(i in 1 : prefix_list){
+
+		quant_baseline(prefix)
+	}
+
 }
 
