@@ -41,6 +41,7 @@ calculate_MI <- function(prefix){
 	# calulate thresholds	
 	MI_dot_thresh <- (MI_dot > 0) & (MI_grat < 0)
 	MI_grat_thresh <- (MI_grat > 0) & (MI_dot < 0)
+	MI_both_thresh <- (MI_grat > 0) & (MI_dot > 0)
 
 	norm_fits <- list(grat_fits = grat_fits, dot_fits = dot_fits)
 
@@ -53,8 +54,9 @@ calculate_MI <- function(prefix){
 
 	write.table(MI_dot_thresh, paste(data_directory, "MI_dot_thresh.dat", sep=""))
 	write.table(MI_grat_thresh, paste(data_directory, "MI_grat_thresh.dat", sep=""))
+	write.table(MI_both_thresh, paste(data_directory, "MI_both_thresh.dat", sep=""))
 
-	write.table(MI_dot, paste(data_directory, "MI_grat.dat", sep=""))
+
+	write.table(MI_grat, paste(data_directory, "MI_grat.dat", sep=""))
 	write.table(MI_dot, paste(data_directory, "MI_dot.dat", sep=""))
 }
-
