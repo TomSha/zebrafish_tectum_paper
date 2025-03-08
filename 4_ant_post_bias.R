@@ -15,6 +15,7 @@ AP_bias <- function(prefix_list){
 
 	MI_dot_thresh_list <- vector("list", n_exps)
 	MI_grat_thresh_list <- vector("list", n_exps)
+	MI_both_thresh_list <- vector("list", n_exps)
 
 	dot_model_n_list <- vector("list", n_exps)
 	grat_model_n_list <- vector("list", n_exps)
@@ -31,6 +32,7 @@ AP_bias <- function(prefix_list){
 		
 		MI_grat_thresh_list[[i]] <- read.table(paste(data_directory, "MI_grat_thresh.dat", sep=""))[, 1]
 		MI_dot_thresh_list[[i]] <- read.table(paste(data_directory, "MI_dot_thresh.dat", sep=""))[, 1]
+		MI_both_thresh_list[[i]] <- read.table(paste(data_directory, "MI_both_thresh.dat", sep=""))[, 1]
 
 		NCC_thresh_list[[i]] <- read.table(paste(data_directory, "NCC_thresh.dat", sep=""))[, 1]
 
@@ -71,12 +73,28 @@ AP_bias <- function(prefix_list){
 
 	dat_grat <- list(bins_count = grat_count, sample_size = sample_size, n_exp = n_exp, n_bin = n_bin, n_marg = n_marg)
 
+	# both data
+	# get normalised number of neurons per bin
+	both_count <- mapply(norm_cell_num, xy_bins_list, MI_both_thresh_list, NCC_thresh_list)
+	both_count <- array(both_count, dim = c(dim(both_count), 1))
+	# neuron number per experiment
+	sample_size <- apply(both_count, c(2, 3), sum)
+	# number of experiments 
+	n_exp <- dim(both_count)[2]
+	# number of bins
+	n_bin <- dim(both_count)[1]
+	# number of subtypes
+	n_marg <- dim(both_count)[3]
+
+	dat_both <- list(bins_count = both_count, sample_size = sample_size, n_exp = n_exp, n_bin = n_bin, n_marg = n_marg)
+
 	# run the hierarchical multinomial models
 	model_output_dot <- run_multi_model(dat_dot)
 	model_output_grat <- run_multi_model(dat_grat)
+	model_output_both <- run_multi_model(dat_both)
 
-	dat <- list(dot = dat_dot, grat = dat_grat)
-	model_output <- list(dot = model_output_dot, grat = model_output_grat)
+	dat <- list(dot = dat_dot, grat = dat_grat, both = dat_both)
+	model_output <- list(dot = model_output_dot, grat = model_output_grat, both = model_output_both)
 
 	# calculate AP bias index
 	AP_bias <- calculate_AP_bias(model_output)
