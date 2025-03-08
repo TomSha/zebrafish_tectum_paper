@@ -16,3 +16,6 @@ quant_baseline <- function(prefix){
     write.table(bl_quant$fluor, paste(data_directory, "baseline_fluor.dat", sep = ""), row.names = F, col.names = F)
 }
 
+
+
+
