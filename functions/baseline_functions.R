@@ -34,15 +34,3 @@ quant_baseline_metrics <- function(traces, baseL_index){
     
     return(returnList)
 }
-
-plot_func <- function(i){
-    par(mfrow = c(2,1))
-    plot(traces[i,], type = "l")
-    lines(which(spikes[i,] == 1), rep(50, length(which(spikes[i,] ==1))), type = "p", col = "red", pch = 19)
-    if (sum(baseL_index[i,]) != 0){
-        lines(which(baseL_index[i,]), traces[i,baseL_index[i,]], col = "green4")
-        plot(traces[i, baseL_index[i,]], type = "l") 
-    }
-
-
-}
