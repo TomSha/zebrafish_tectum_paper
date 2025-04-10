@@ -1,7 +1,7 @@
 data {
   int<lower=1> N_obs;
   int<lower=1> Dim;
-  array[N_obs] vector[Dim] x_obs;
+  matrix[N_obs, Dim] x_obs;
   vector[N_obs] y_obs;
 }
 
@@ -14,6 +14,7 @@ parameters {
 
 model {
   matrix[N_obs, N_obs] cov;
+  matrix[N_obs, N_obs] L_cov;
   
   for(i in 1:N_obs) {
    cov[i,i] = square(sigma) + square(alpha);
@@ -25,7 +26,7 @@ model {
   } 
    
                              
-  matrix[N_obs, N_obs] L_cov = cholesky_decompose(cov);
+  L_cov  = cholesky_decompose(cov);
 
   rho1 ~ inv_gamma(10, 1000); 
   rho2 ~ inv_gamma(10, 1000); 

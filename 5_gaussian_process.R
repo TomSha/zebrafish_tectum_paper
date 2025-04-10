@@ -16,12 +16,14 @@ save_GP_fit <- function(prefix){
 	NCC_thresh <- read.table(paste(data_directory,"NCC_thresh.dat",sep=""))[,1]
 
 	MI_dot_thresh <- read.table(paste(data_directory,"MI_dot_thresh.dat",sep=""))[,1]
-	MI_dot <- read.table(paste(data_directory,"MI_dot.dat",sep=""))[,1]
+	MI_dot0 <- read.table(paste(data_directory,"MI_dot.dat",sep=""))[,1]
 
 	MI_grat_thresh <- read.table(paste(data_directory,"MI_grat_thresh.dat",sep=""))[,1]
-	MI_grat <- read.table(paste(data_directory,"MI_grat.dat",sep=""))[,1]
+	MI_grat0 <- read.table(paste(data_directory,"MI_grat.dat",sep=""))[,1]
 	
-	xy_r <- read.table(paste(main_directory,prefix,"/xy_warped_2.dat",sep=""))
+	MI_both_thresh <- read.table(paste(data_directory,"MI_both_thresh.dat",sep=""))[,1]
+
+	xy_r <- read.table(paste(main_directory,prefix,"/xy_warped_2.dat",sep=""))[,1:2]
 
 	angle <- 25
 	alpha <- angle * pi / 180
@@ -29,9 +31,14 @@ save_GP_fit <- function(prefix){
 
 	dot_pnts_r <- xy_r[MI_dot_thresh & NCC_thresh,]
 	grat_pnts_r <- xy_r[MI_grat_thresh & NCC_thresh,]
+	both_pnts_r <- xy_r[MI_both_thresh & NCC_thresh,]
 
-	MI_dot <- MI_dot[MI_dot_thresh & NCC_thresh]
-	MI_grat <- MI_grat[MI_grat_thresh & NCC_thresh]
+	MI_dot <- MI_dot0[MI_dot_thresh & NCC_thresh]
+	MI_grat <- MI_grat0[MI_grat_thresh & NCC_thresh]
+
+	MI_dot_both <- MI_dot0[MI_both_thresh & NCC_thresh]
+	MI_grat_both <- MI_grat0[MI_both_thresh & NCC_thresh]
+
 	
 	# Generate X coordinates to make predictions
 	marg1_X <- seq(-37, 245, length.out = 100)
@@ -48,14 +55,14 @@ save_GP_fit <- function(prefix){
 	thresh <- thresh1 & thresh2 & thresh3 & thresh4
 	X_predict <- X_predict[thresh,]
 
-	writeLines(readLines("fit_GP2d_dat.stan"))
+	writeLines(readLines("models/GP_2D.stan"))
 	
 	# Run model for dots
 	X <- dot_pnts_r
 	Y <- MI_dot
 
 	dat <- list(N_obs = nrow(X), Dim = 2, x_obs = X, y_obs = Y)
-	fit <- stan(file = "fit_GP2d_dat.stan", data = dat, chains = 4, cores = 4, refresh = 500, iter = 2000)
+	fit <- stan(file = "models/GP_2D.stan", data = dat, chains = 4, cores = 4, refresh = 500, iter = 2000)
 
 	samples <- extract(fit)
 	n_samps <- length(samples[[1]])
@@ -80,6 +87,36 @@ save_GP_fit <- function(prefix){
 	
 	#saveRDS(fit, paste(data_directory, "GP_stan_grat_fit.RDS", sep = ""))
 	#saveRDS(pred_list, paste(data_directory, "GP_stan_grat_predictions.RDS", sep = ""))
+
+	# Run model for dots both
+	X <- both_pnts_r
+	Y <- MI_dot_both
+
+	dat <- list(N_obs = nrow(X), Dim = 2, x_obs = X, y_obs = Y)
+	fit <- stan(file = "models/GP_2D.stan", data = dat, chains = 4, cores = 4, refresh = 500, iter = 2000)
+
+	samples <- extract(fit)
+	n_samps <- length(samples[[1]])
+
+	pred_list <- calc_reg(samples, X, Y, X_predict, n_samps = n_samps)
+
+	saveRDS(fit, paste(data_directory, "GP_stan_dot_both_fit.RDS", sep = ""))
+	saveRDS(pred_list, paste(data_directory, "GP_stan_dot_both_predictions.RDS", sep = ""))
+
+	# Run model for grat both
+	X <- both_pnts_r
+	Y <- MI_grat_both
+
+	dat <- list(N_obs = nrow(X), Dim = 2, x_obs = X, y_obs = Y)
+	fit <- stan(file = "models/GP_2D.stan", data = dat, chains = 4, cores = 4, refresh = 500, iter = 2000)
+
+	samples <- extract(fit)
+	n_samps <- length(samples[[1]])
+
+	pred_list <- calc_reg(samples, X, Y, X_predict, n_samps = n_samps)
+
+	saveRDS(fit, paste(data_directory, "GP_stan_grat_both_fit.RDS", sep = ""))
+	saveRDS(pred_list, paste(data_directory, "GP_stan_grat_both_predictions.RDS", sep = ""))
 
 		
 }	
