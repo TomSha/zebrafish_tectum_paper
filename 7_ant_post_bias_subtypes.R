@@ -1,4 +1,5 @@
 source("functions/4_ant_post_bias_functions.R")
+source("models/hier_multinomial.R")
 
 AP_bias_subtypes <- function(prefix_list){
 	xy_bins_list <- vector("list",length(prefix_list))
@@ -8,6 +9,7 @@ AP_bias_subtypes <- function(prefix_list){
 
 	MI_dot_thresh_list <- vector("list",length(prefix_list))
 	MI_grat_thresh_list <- vector("list",length(prefix_list))
+	MI_both_thresh_list <- vector("list",length(prefix_list))
 
 	dot_model_n_list <- vector("list",length(prefix_list))
 	grat_model_n_list <- vector("list",length(prefix_list))
@@ -24,6 +26,7 @@ AP_bias_subtypes <- function(prefix_list){
 		
 		MI_grat_thresh_list[[i]] <- read.table(paste(data_directory,"MI_grat_thresh.dat",sep=""))[,1]
 		MI_dot_thresh_list[[i]] <- read.table(paste(data_directory,"MI_dot_thresh.dat",sep=""))[,1]
+		MI_both_thresh_list[[i]] <- read.table(paste(data_directory,"MI_both_thresh.dat",sep=""))[,1]	
 
 		dot_model_n_list[[i]] <- read.table(paste(data_directory,"dot_model_number.dat",sep=""))$V1
 		grat_model_n_list[[i]] <- read.table(paste(data_directory,"grat_model_number.dat",sep=""))$V1
@@ -32,31 +35,33 @@ AP_bias_subtypes <- function(prefix_list){
 
 	}
 
+	MI_dot_thresh_list <- mapply(function(x, y) x|y , MI_dot_thresh_list, MI_both_thresh_list)
+	MI_grat_thresh_list <- mapply(function(x, y) x|y , MI_grat_thresh_list, MI_both_thresh_list)
 
 	# dot dat
 	# get the normalised cell counts per bin for all subtypes
 	dot_count <- mapply(norm_cell_num, xy_bins_list, MI_dot_thresh_list, NCC_thresh_list, dot_model_n_list, SIMPLIFY = F)
 	dot_count <- simplify2array(dot_count)
-	dot_count <- aperm(bins_dot_count, c(1, 3, 2))
+	dot_count <- aperm(dot_count, c(1, 3, 2))
 	
-	sample_size <- apply(bins_dot_count, c(2, 3), sum)
-	n_exp <- dim(bins_dot_count)[2]
-	n_bin <- dim(bins_dot_count)[1]
-	n_marg <- dim(bins_dot_count)[3]
-	dat_dot <- list(bins_count = bins_dot_count, sample_size = sample_size, n_exp = n_exp, n_bin = n_bin, n_marg = n_marg)
+	sample_size <- apply(dot_count, c(2, 3), sum)
+	n_exp <- dim(dot_count)[2]
+	n_bin <- dim(dot_count)[1]
+	n_marg <- dim(dot_count)[3]
+	dat_dot <- list(bins_count = dot_count, sample_size = sample_size, n_exp = n_exp, n_bin = n_bin, n_marg = n_marg)
 
 
 	# grat dat
 	# get the normalised cell counts per bin for all subtypes
 	grat_count <- mapply(norm_cell_num, xy_bins_list, MI_grat_thresh_list, NCC_thresh_list, grat_model_n_list, SIMPLIFY = F)
-	grat_count <- simplify2array(bins_grat_count)
-	grat_count <- aperm(bins_grat_count, c(1, 3, 2))
+	grat_count <- simplify2array(grat_count)
+	grat_count <- aperm(grat_count, c(1, 3, 2))
 
-	sample_size <- apply(bins_grat_count, c(2, 3), sum)
-	n_exp <- dim(bins_grat_count)[2]
-	n_bin <- dim(bins_grat_count)[1]
-	n_marg <- dim(bins_grat_count)[3]
-	dat_grat <- list(bins_count = bins_grat_count, sample_size = sample_size, n_exp = n_exp, n_bin = n_bin, n_marg = n_marg)
+	sample_size <- apply(grat_count, c(2, 3), sum)
+	n_exp <- dim(grat_count)[2]
+	n_bin <- dim(grat_count)[1]
+	n_marg <- dim(grat_count)[3]
+	dat_grat <- list(bins_count = grat_count, sample_size = sample_size, n_exp = n_exp, n_bin = n_bin, n_marg = n_marg)
 
 	# run multinomial model
 	model_output_dot <- run_multi_model(dat_dot)
@@ -72,7 +77,7 @@ AP_bias_subtypes <- function(prefix_list){
 		dir.create(paste(main_directory,"info_analysis/",sep=""))
 	}
 
-	#saveRDS(model_output,paste(main_directory,"info_analysis/multi_model_subtype.RDS",sep=""))
+	saveRDS(model_output,paste(main_directory,"info_analysis/multi_model_subtype.RDS",sep=""))
 	saveRDS(dat,paste(main_directory,"info_analysis/multi_model_subtype_dat.RDS",sep=""))
 	saveRDS(AP_bias, paste(main_directory,"info_analysis/ant_post_bias_subtype.RDS",sep=""))
 

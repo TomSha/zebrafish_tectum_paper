@@ -11,6 +11,7 @@ save_hier_lin_reg <- function(prefix_list){
 
 	MI_dot_thresh_list<-vector("list",length(prefix_list))
 	MI_grat_thresh_list<-vector("list",length(prefix_list))
+	MI_both_thresh_list<-vector("list",length(prefix_list))
 
 	dot_model_n_list<-vector("list",length(prefix_list))
 	grat_model_n_list<-vector("list",length(prefix_list))
@@ -27,6 +28,7 @@ save_hier_lin_reg <- function(prefix_list){
 		
 		MI_grat_thresh_list[[i]]<-read.table(paste(data_directory,"MI_grat_thresh.dat",sep=""))[,1]
 		MI_dot_thresh_list[[i]]<-read.table(paste(data_directory,"MI_dot_thresh.dat",sep=""))[,1]
+		MI_both_thresh_list[[i]]<-read.table(paste(data_directory,"MI_both_thresh.dat",sep=""))[,1]
 
 		dot_model_n_list[[i]]<-read.table(paste(data_directory,"dot_model_number.dat",sep=""))$V1
 		grat_model_n_list[[i]]<-read.table(paste(data_directory,"grat_model_number.dat",sep=""))$V1
@@ -35,10 +37,12 @@ save_hier_lin_reg <- function(prefix_list){
 
 	}
 
-	AP_bias <- readRDS(paste(main_directory, "info_analysis/ant_post_bias.RDS", sep = ""))
+	AP_bias <- readRDS(paste(main_directory, "info_analysis/ant_post_bias_subtype.RDS", sep = ""))
 
 
 	# Get the average MI per subtype 
+	MI_dot_thresh_list <- mapply(function(x, y) x | y, MI_dot_thresh_list, MI_both_thresh_list)
+	MI_grat_thresh_list <- mapply(function(x, y) x | y, MI_grat_thresh_list, MI_both_thresh_list)
 
 	MI_dot <- lapply(1:23, function(x) mapply(function(MI,thresh,NCC,mod) MI[thresh & NCC & mod == x], MI_dot_list, MI_dot_thresh_list, NCC_thresh_list, dot_model_n_list))
 	MI_dot <- sapply(MI_dot, function(x) sapply(x, mean))
@@ -96,7 +100,7 @@ save_hier_lin_reg <- function(prefix_list){
 	dat <- list(dot = dat_dot, grat = dat_grat)
 	model_output <- list(dot = mod_fit_dot, grat = mod_fit_grat)
 
-#	saveRDS(model_output, paste(main_directory, "info_analysis/", model_name, ".RDS", sep = ""))
+	saveRDS(model_output, paste(main_directory, "info_analysis/", model_name, ".RDS", sep = ""))
 	saveRDS(dat, paste(main_directory, "info_analysis/", model_name, "_dat.RDS", sep = ""))
 }
 
