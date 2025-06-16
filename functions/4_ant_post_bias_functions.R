@@ -1,3 +1,4 @@
+library(bayestestR)
 
 ########################################################################
 # Rotates 2D coordinates about a point counterclockwise
