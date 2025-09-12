@@ -15,6 +15,28 @@ LOO_fit <- function(stimulus_reps_mat){
 
 }
 
+fit_multi_norm <- function(dat){
+
+		mu_hat <- colMeans(dat)
+		cor_mat <- cor(dat)
+		var_vec <- apply(dat, 2, sd)
+		var_mat <- matrix(rep(var_vec, each = length(mu_hat)), nrow = length(mu_hat))
+		Sigma_hat <- cor_mat * var_mat * t(var_mat)
+
+		returnList <- list("mu_hat" = mu_hat, "Sigma_hat" = Sigma_hat)
+		
+		return(returnList)
+}
+
+LOO_multi_fit <- function(dat){
+
+		params_list <- vector("list", length(n_reps))
+		for (i in 1 : n_reps){
+			params_list[[i]] <- fit_multi_norm(t(dat[,-i]))
+		}
+		return(params_list)
+}
+
 
 calc_likelihood <- function(responses_array, fits){
 
@@ -156,39 +178,3 @@ mask_cells <- function(xy, mask){
 }
 
 
-###########################################################################f
-# calculates euclidean distance between rows of a data matrix
-#
-# Input :
-# dat : a data matrix
-# 
-# Output
-# euc_dist : the euclidean distance matrix
-
-calculate_dist <- function(dat){
-	euc_dist <- as.matrix(dist(dat, upper = T))
-	return(euc_dist)
-}
-############################################################################
-
-
-############################################################################
-# calculate the local density of each data point
-#
-# Input :
-# euc_dist : is the distance matrix of the data points
-# KNN : is the integer of K nearest neighbours used to calculate the density
-#
-# Output :
-# dens : a vector of the local density for each data point
-# kNN_dist : a vector of the distance to the kth nearest neighbour
-
-calculate_density <- function(euc_dist, KNN){
-
-	# for each data point find the dist to KthNN
-	kNN_dist <- apply(euc_dist, 2, function(x) sort(x)[(KNN + 1)])
-
-	# find the local density for each point
-	dens <- 1 / kNN_dist ^ ncol(dat)
-	return(dens)
-}
