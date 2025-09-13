@@ -4,6 +4,7 @@ source("functions/10_decoding_functions.R")
 source("functions/4_ant_post_bias_functions.R")
 library(gam)
 library(tiff)
+library(mvtnorm)
 
 calc_LOO_logliklihood <- function(prefix_list){
 
@@ -153,26 +154,30 @@ for (i in 1:length(prefix_list)){
 		
 
 
-plot_decoded_correct_perc <- function(S_lab = 1.5, S_axis = 1.5, S_leg = 2, L1 = 3, L2 = 3, ks = 1:100){
+plot_decoded_correct_perc <- function(S_lab = 1.5, S_axis = 1.5, S_leg = 2, S_pnts = 1, L1 = 3, L2 = 3, ks = 1:100){
 
 	mu_grats <- sapply(grat_decoded_correct_list, function(x) apply(x, 1, mean))
 	mu_dots <- sapply(dot_decoded_correct_list, function(x) apply(x, 1, mean))
-	matplot(ks, mu_dots * 100, col = add_alpha(0.5, martincolourscale[1]), 
-	pch = 19, ylab = "", ylim = c(0, 100), xlab = "", font.axis = 2, cex.axis = S_axis)
+	matplot(ks, mu_dots * 100, col = add_alpha(0.5, martincolourscale[1]), cex = S_pnts,
+	pch = 19, ylab = "", ylim = c(0, 100), xlab = "", font.axis = 2, cex.axis = S_axis, xaxt = "n", yaxt = "n")
 	matlines(ks, mu_dots * 100, col = martincolourscale[1], lty = 1)
 
-	matplot(ks, mu_grats * 100, col = add_alpha(0.5, martincolourscale[2]), pch = 19, add = TRUE)
+	matplot(ks, mu_grats * 100, col = add_alpha(0.5, martincolourscale[2]), cex = S_pnts, 
+		pch = 19, add = TRUE)
 	matlines(ks, mu_grats * 100, col = martincolourscale[2], lty = 1)
-	legend("bottomright", fill = martincolourscale[1:2], legend = c("local motion", "whole-field motoin"), bty = "n", cex = S_leg, text.font = 2)
+	legend("bottomright", fill = martincolourscale[1:2], legend = c("local motion", "whole-field motion"), bty = "n", cex = S_leg, text.font = 2)
 
 	mtext(side = 1, text = "neurons/assembly", cex = S_lab, font = 2, line = L1)
 	mtext(side = 2, text = "decoding performance (%)", cex = S_lab, font = 2, line = L2)
 
+    axis(side = 1, at = seq(from = 0, to = 100, by = 10), cex.axis = S_axis, font.axis = 2, tick = F, line = -1.2)
+    axis(side = 2, at = seq(from = 0, to = 100, by = 20), cex.axis = S_axis, font.axis = 2, tick = F, line = -1)
+
 }
 
-plot_ensemble <- function(xy_r, NN, neuron = 7){
-	plot(xy_r[, 1:2], pch = 19, col = rgb(0, 0, 0, 0.1), xlab = "", ylab = "", xaxt = "n", yaxt = "n")
-	points(xy_r[NN[, neuron], 1:2], pch = 19)
+plot_ensemble <- function(xy_r, NN, neuron = 7, S_pnts = 0.5){
+	plot(xy_r[, 1:2], pch = 19, col = rgb(0, 0, 0, 0.1), xlab = "", ylab = "", xaxt = "n", yaxt = "n", cex = S_pnts, ann = F, axes = F)
+	points(xy_r[NN[, neuron], 1:2], pch = 19, cex = S_pnts)
 
 }
 
@@ -188,7 +193,7 @@ fit_gam <- function(x, y, min_x = NA, max_x = NA, cols = martincolourscale[1], p
 		preds <- predict(fit, new_dat)
 #		ord <- order(x)
 		if(plot_gam){
-			points(new_dat[, 1], (preds * 100), type = "l", col = cols, lwd = 3, ylab = "", xlab = "")
+			points(new_dat[, 1], (preds * 100), type = "l", col = cols, lwd = 2, ylab = "", xlab = "")
 #			abline(v = new_dat[which.max(preds),1], lty = 2, lwd = 2, col = add_alpha(1, cols))
 		}else{
 			return(preds)
@@ -214,7 +219,7 @@ S_axis = 1.5, S_main = 1.5, S_lab = 1.5, S_leg = 2, L1 = 2, L2 = 3, min_x = -70,
 	lower <- mu - sig
 
 	plot(min_x : max_x, mu, col = martincolourscale[1], type = "l", lwd = 2,
-	ylim = c(0, 100), xlim = c(min_x, max_x), xaxt = "n", cex.axis = S_axis, cex.main = S_main, font.axis = 2, ann = FALSE)
+	ylim = c(0, 100), xlim = c(min_x, max_x), xaxt = "n", yaxt = "n", cex.axis = S_axis, cex.main = S_main, font.axis = 2, ann = FALSE)
 	polygon(c(min_x:max_x, max_x:min_x), c(upper, rev(lower)), col = add_alpha(0.3, martincolourscale[1]), border = FALSE)
 #	abline(v = (min_x : max_x)[which.max(mu)], lty = 2, lwd = 2, col = martincolourscale[1])
 
@@ -235,21 +240,22 @@ S_axis = 1.5, S_main = 1.5, S_lab = 1.5, S_leg = 2, L1 = 2, L2 = 3, min_x = -70,
 
 	legend("bottomright", fill = martincolourscale[1:2], legend = c("local motion", "whole-field motoin"), bty = "n", cex = S_leg, text.font = 2)
 
+    axis(side = 2, at = seq(from = 0, to = 100, by = 20), cex.axis = S_axis, font.axis = 2, tick = F, line = -1)
 }
 
 
 
 
 plot_location_v_performance <- function(xy_r_projection, dot_decoded_correct, grat_decoded_correct, k, reg_line = TRUE,
-S_lab = 1.5, L2 = 3, L1 = 2, S_main = 3, S_axis = 1.5, main_t = "", min_x = -70, max_x = 150){
+S_lab = 1.5, L2 = 3, L1 = 2, S_main = 3, S_axis = 1.5, S_pnts = 1, main_t = "", min_x = -70, max_x = 150){
 
 	xy_r_projection <- xy_r_projection[,1]
-	plot(xy_r_projection, dot_decoded_correct[k,] * 100, cex.axis = S_axis, cex.lab = S_lab, cex.main = S_main,
-	pch = 19, ylim = c(0, 100), col = add_alpha(0.2, martincolourscale[1]), xaxt = "n", ylab = "", 
+	plot(xy_r_projection, dot_decoded_correct[k,] * 100, cex.axis = S_axis, cex.lab = S_lab, cex.main = S_main, cex = S_pnts,
+	pch = 19, ylim = c(0, 100), col = add_alpha(0.2, martincolourscale[1]), xaxt = "n", yaxt = "n", ylab = "", 
 	xlab = "", font.axis = 2, main = main_t, xlim = c(min_x, max_x))
 
 	points(xy_r_projection, grat_decoded_correct[k,] * 100, 
-	pch = 19, ylim = c(0, 100), col = add_alpha(0.2, martincolourscale[2]), xaxt = "n")
+	pch = 19, ylim = c(0, 100), col = add_alpha(0.2, martincolourscale[2]), xaxt = "n", yaxt = "n", cex = S_pnts)
 
 	if(reg_line){
 		fit_gam(xy_r_projection, dot_decoded_correct[k,], cols = martincolourscale[1])
@@ -261,6 +267,7 @@ S_lab = 1.5, L2 = 3, L1 = 2, S_main = 3, S_axis = 1.5, main_t = "", min_x = -70,
 	mtext(side = 1, text = "anterior:posterior", cex = S_lab, font = 2, line = L1)
 	mtext(side = 2, text = "decoding performance (%)", cex = S_lab, font = 2, line = L2)
 
+    axis(side = 2, at = seq(from = 0, to = 100, by = 20), cex.axis = S_axis, font.axis = 2, tick = F, line = -1)
 }
 
 calc_bias <- function(decoded_correct, xy_r_projection, min_max_x){
@@ -284,16 +291,17 @@ calc_bias <- function(decoded_correct, xy_r_projection, min_max_x){
 }
 
 plot_bias <- function(xy_r_projection_list, dot_decoded_correct_list, grat_decoded_correct_list, S_lab = 1.5, S_axis = 1.5, 
-L2 = 3, L1 = 3, S_leg = 2, ylims = c(-25, 25), main_t = "", S_main = 3, ks = 1:100){
+L2 = 3, L1 = 3, S_leg = 2, S_pnts = 1, ylims = c(-25, 25), main_t = "", S_main = 3, ks = 1:100){
+
 	dot_ant_post_bias <- mapply(calc_bias, dot_decoded_correct_list, xy_r_projection_list, min_max_x_list)
 	grat_ant_post_bias <- mapply(calc_bias, grat_decoded_correct_list, xy_r_projection_list, min_max_x_list)
 
 	matplot(ks, dot_ant_post_bias, pch = 19, col = add_alpha(0.3, martincolourscale[1]), ylim = ylims,
-	xlab = "", ylab = "", font.axis = 2, cex.axis = S_axis, main = main_t, cex.main = S_main)
+	xlab = "", ylab = "", font.axis = 2, cex.axis = S_axis, main = main_t, cex.main = S_main, cex = S_pnts, xaxt = "n", yaxt = "n")
 	matlines(ks, dot_ant_post_bias, lty = 1, pch = 19, col = add_alpha(0.3, martincolourscale[1]))
 	points(ks, rowMeans(dot_ant_post_bias), pch = 19, col = martincolourscale[1], type = "l", lwd = 3)
 
-	matplot(ks, grat_ant_post_bias, pch = 19, col = add_alpha(0.3, martincolourscale[2]), add = T)
+	matplot(ks, grat_ant_post_bias, pch = 19, col = add_alpha(0.3, martincolourscale[2]), add = T, cex = S_pnts)
 	matlines(ks, grat_ant_post_bias, lty =1,  pch = 19, col = add_alpha(0.3, martincolourscale[2]))
 	points(ks, rowMeans(grat_ant_post_bias), pch = 19, col = martincolourscale[2], type = "l", lwd = 3)
 	abline(h = 0, lty = 2, lwd = 2, col = rgb(0, 0, 0, 0.3))
@@ -301,52 +309,56 @@ L2 = 3, L1 = 3, S_leg = 2, ylims = c(-25, 25), main_t = "", S_main = 3, ks = 1:1
 	mtext(side = 1, text = "neurons/assembly", cex = S_lab, font = 2, line = L1)
 	mtext(side = 2, text = "anterior:posterior bias (%)", cex = S_lab, font = 2, line = L2)
 
-	legend("bottomright", fill = martincolourscale[1:2], legend = c("local motion", "whole-field motoin"), bty = "n", cex = S_leg, text.font = 2)
+    axis(side = 1, at = seq(from = 0, to = 100, by = 10), cex.axis = S_axis, font.axis = 2, tick = F, line = -1.2)
+    axis(side = 2, at = seq(from = -30, to = 30, by = 10), cex.axis = S_axis, font.axis = 2, tick = F, line = -1)
+
+	legend("topright", fill = martincolourscale[1:2], legend = c("local motion", "whole-field motoin"), bty = "n", cex = S_leg, text.font = 2)
 }
 
 
 
-plot_fig <- function(fish = 7, neuron = 1, S_letter = 3, S_lab = 2, S_axis = 2){
+plot_fig <- function(fish = 7, neuron = 1, S_letter = 3, S_lab = 2, S_axis = 2, S_main = 2, S_leg = 1 , S_pnts = 1, L1 = 1, L2 = 1){
 	
 	par(mfrow = c(3, 3))
 	NN <- find_KNN(xy_list[[fish]], 200)
-	par(mar = c(3, 6, 3, 6))
+	par(mar = c(2, 3, 2, 3))
 	plot_ensemble(xy_r_list[[fish]], NN, neuron)
 	title(main="A)",adj=0,cex.main=S_letter)
-	par(mar = c(6, 6, 5, 2))
-	plot_decoded_correct_perc(S_lab = S_lab, S_axis = S_axis)
+	par(mar = c(2, 2, 1, 0.5))
+	plot_decoded_correct_perc(S_lab = S_lab, S_axis = S_axis, S_leg = S_leg, S_pnts = S_pnts, L1 = L1 , L2 = L2)
 	title(main="B)",adj=0,cex.main=S_letter)
-#	plot(xy_r_list[[fish]][, 1:2], col = colPalette(xy_r_projection_list[[fish]]), pch = 19, ann = FALSE, xaxt = "n", yaxt = "n")
-	plot_bias(xy_r_projection_list, dot_decoded_correct_list, grat_decoded_correct_list, S_lab = S_lab, S_axis = S_axis)
+	plot_bias(xy_r_projection_list, dot_decoded_correct_list, grat_decoded_correct_list, 
+				S_lab = S_lab, S_axis = S_axis, S_leg = S_leg, S_pnts = S_pnts, L1 = L1, L2 = L2)
 	title(main="C)",adj=0,cex.main=S_letter)
 
-	plot_location_v_performance(xy_r_projection_list[[fish]], dot_decoded_correct_list[[fish]], grat_decoded_correct_list[[fish]], k = 1, main_t = "single neuron decoding", S_lab = S_lab, S_axis = S_axis)
+	plot_location_v_performance(xy_r_projection_list[[fish]], dot_decoded_correct_list[[fish]], grat_decoded_correct_list[[fish]], k = 1, main_t = "single neuron decoding", S_lab = S_lab, S_axis = S_axis, S_main = S_main, S_pnts = S_pnts, L2 = L2)
 	title(main="D)",adj=0,cex.main=S_letter)
-	plot_location_v_performance(xy_r_projection_list[[fish]], dot_decoded_correct_list[[fish]], grat_decoded_correct_list[[fish]], k = 10, main_t = "10 neurons/assembly", S_lab = S_lab, S_axis = S_axis)
+	plot_location_v_performance(xy_r_projection_list[[fish]], dot_decoded_correct_list[[fish]], grat_decoded_correct_list[[fish]], k = 10, main_t = "10 neurons/assembly", S_lab = S_lab, S_axis = S_axis, S_main = S_main, S_pnts = S_pnts, L2 = L2)
 	title(main="E)",adj=0,cex.main=S_letter)
-	plot_location_v_performance(xy_r_projection_list[[fish]], dot_decoded_correct_list[[fish]], grat_decoded_correct_list[[fish]], k = 20, main_t = "20 neurons/assembly", S_lab = S_lab, S_axis = S_axis)
+	plot_location_v_performance(xy_r_projection_list[[fish]], dot_decoded_correct_list[[fish]], grat_decoded_correct_list[[fish]], k = 20, main_t = "20 neurons/assembly", S_lab = S_lab, S_axis = S_axis, S_main = S_main, S_pnts = S_pnts, L2 = L2)
 	title(main="F)",adj=0,cex.main=S_letter)
 
-	plot_average_regression(xy_r_projection_list, dot_decoded_correct_list, grat_decoded_correct_list, 1, S_lab = S_lab, S_axis = S_axis)
+	plot_average_regression(xy_r_projection_list, dot_decoded_correct_list, grat_decoded_correct_list, 1, S_lab = S_lab, S_axis = S_axis, S_leg = S_leg, L2 = L2)
 	title(main="G)",adj=0,cex.main=S_letter)
-	plot_average_regression(xy_r_projection_list, dot_decoded_correct_list, grat_decoded_correct_list, 2, S_lab = S_lab, S_axis = S_axis)
+	plot_average_regression(xy_r_projection_list, dot_decoded_correct_list, grat_decoded_correct_list, 10, S_lab = S_lab, S_axis = S_axis, S_leg = S_leg, L2 = L2)
 	title(main="H)",adj=0,cex.main=S_letter)
-	plot_average_regression(xy_r_projection_list, dot_decoded_correct_list, grat_decoded_correct_list, 40, S_lab = S_lab, S_axis = S_axis)
+	plot_average_regression(xy_r_projection_list, dot_decoded_correct_list, grat_decoded_correct_list, 40, S_lab = S_lab, S_axis = S_axis, S_leg = S_leg, L2 = L2)
 	title(main="I)",adj=0,cex.main=S_letter)
 
 }
 
 
 
-plot_fig_stim <- function(S_letter = 3, S_main = 3, S_lab = 2, S_axis = 2){
+plot_fig_stim <- function(S_letter = 3, S_main = 3, S_lab = 2, S_axis = 2, S_leg = 1, S_pnts = S_pnts, L1 = 1, L2 = 1){
 
-	par(mfrow=c(1,4), mar = c(5, 5, 5, 2))
+	par(mfrow = c(1, 4), mar = c(1.5, 2, 1, 0.5))
 	#check the order!!!!!
 	stim_names <- c("CR 5", "CR 26", "RC 5", "RC 26")
 	fig_letters <- c("J)", "K)", "L)", "M)")
 
 	for(i in 1:4){
-		plot_bias(xy_r_projection_list, lapply(dot_stim_decoded_list, "[[", i), lapply(grat_stim_decoded_list, "[[", i), ylims = c(-35, 35), main_t = paste("stimulus:", stim_names[i]), S_main = S_main, S_lab = S_lab, S_axis = S_axis)
+		plot_bias(xy_r_projection_list, lapply(dot_stim_decoded_list, "[[", i), lapply(grat_stim_decoded_list, "[[", i), ylims = c(-35, 35), main_t = paste("stimulus:", stim_names[i]), 
+					S_main = S_main, S_lab = S_lab, S_axis = S_axis, S_leg = S_leg, S_pnts = S_pnts, L1 = L1, L2 = L2)
 		title(main=fig_letters[i],adj=0,cex.main=S_letter)
 	}
 }
@@ -354,14 +366,18 @@ plot_fig_stim <- function(S_letter = 3, S_main = 3, S_lab = 2, S_axis = 2){
 
 
 user<-Sys.info()[names(Sys.info())=="user"]
-save_direc<-paste("/media/",user,"/Samsung_T5/Work/tectal_subdomain_paper/",sep="")
-png(paste(save_direc, "fig_10.png", sep = ""), width = 1500, height = 1000)
-plot_fig(2,20)
+save_direc<-paste("/media/",user,"/Samsung_T5/Work/tectal_subdomain_paper/paper_figs/",sep="")
+#png(paste(save_direc, "fig_11.png", sep = ""), width = 1500, height = 1000)
+
+tiff(paste(save_direc, "fig_11.tiff", sep = ""), unit = "cm", width = 17, height = 11.3, res = 300)
+plot_fig(2,20, S_letter = 1, S_lab = 0.5, S_axis = 0.7, S_main = 0.8, S_leg = 0.7, S_pnts = 0.4, L1 = 0.5, L2 = 1)
 dev.off()
 
-png(paste(save_direc, "fig_10b.png", sep = ""), width = 1500, height = 1000/3)
-plot_fig_stim()
+#png(paste(save_direc, "fig_11b.png", sep = ""), width = 1500, height = 1000/3)
+tiff(paste(save_direc, "fig_11b.tiff", sep = ""), unit = "cm", width = 17, height = 4.5, res = 300)
+plot_fig_stim(S_letter = 1, S_lab = 0.5, S_axis = 0.7, S_main = 0.8, S_leg = 0.7, S_pnts = 0.3, L1 = 0.5, L2 = 1)
 dev.off()
+
 
 
 
@@ -394,3 +410,50 @@ plot_halfway <- function(xy_r_projection, min_max_x){
 
 par(mfrow = c(3,3))
 mapply(function(xy_r, min_max) plot_halfway(xy_r, min_max), xy_r_projection_list, min_max_x_list)
+
+
+
+
+
+
+
+calc_LOO_logliklihood <- function(prefix_list){
+
+	for (i in 1 : length(prefix_list)){
+
+		prefix <- prefix_list[i]
+		print(prefix)
+
+		data_directory <- paste(main_directory,prefix,"/suite2p/combined/",sep="")
+		timelog <- read.table(paste(main_directory,prefix,"/time_epoches.log",sep=""))
+		responses_split_list <- readRDS(paste(data_directory, "stimulus_reps.RDS", sep = ""))
+		xy <- read.table(paste(data_directory, "xy.dat", sep = ""))
+
+		pvn_cells_index <- read.table(paste(data_directory, "pvn_cells_index.dat", sep = ""))$V1
+		NCC_thresh <- read.table(paste(data_directory, "NCC_thresh.dat", sep = ""))[,1]
+		xy <- xy[pvn_cells_index & NCC_thresh,]
+		
+		responses_mean_list <- lapply(responses_split_list, function(x) apply(x, c(1, 3), mean))
+		epoch_labels <- get_epoch_labels(timelog)
+		responses_list <- responses_mean_list[grep("^DOT", epoch_labels)]
+		responses_list <- lapply(responses_list, function(x) x[pvn_cells_index & NCC_thresh,])
+		n_stim <- length(responses_list)
+		n_reps <- 10
+
+		params_list <- lapply(responses_list, LOO_multi_fit)
+		NN <- find_KNN(xy, 100)
+		responses_array <- simplify2array(responses_list)
+
+
+		mu <- params_list[[1]][[1]]$mu_hat
+		Sigma <- params_list[[1]][[1]]$Sigma_hat
+		mu <- mu[NN[1:2, 1]]
+		Sigma <- Sigma[NN[1:2, 1], NN[1:2, 1]]
+
+		resps <- responses_array[NN[1:2, 1], 1, 1]
+		dmvnorm(resps, mu, Sigma, log = T)
+
+		log_lik <- calc_likelihood(responses_array, fits)
+		
+	}
+}
