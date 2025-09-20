@@ -41,8 +41,9 @@ for (i in 1 : n_cells){
 snr_old <- signal / bl_noise
 snr_new <- bl_f / bl_noise
 
-X11();plot(MI_dot ~ snr_new)
-cor(MI_dot, snr, use = "complete")
+X11();plot(log(MI_dot) ~ log(snr_new))
+
+cor(MI_dot, snr_new, use = "complete")
 plot(MI_dot ~ signal)
 plot(MI_dot ~ bl_noise)
 
