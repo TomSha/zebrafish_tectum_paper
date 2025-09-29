@@ -24,6 +24,7 @@ quant_baseline_metrics <- function(traces, baseL_index){
     bl_fluor = vector("list", n_cells)
     bl_noise = vector("list", n_cells)
     for (i in 1:n_cells){
+        cat("\r", i)
         bl_fluor[[i]] <- mean(traces[i, baseL_index[i, ]])
         bl_noise[[i]] <- sd(traces[i, baseL_index[i, ]])
     }

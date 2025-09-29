@@ -1,15 +1,17 @@
+library(rstan)
 source("functions/baseline_functions.R")
 source("functions/3_MI_functions.R")
 
 
 quant_baseline <- function(prefix){
+    cat(prefix)
 
 	data_directory <- paste(main_directory, prefix, "/suite2p/combined/", sep = "")
     spikes <- read.table(paste(data_directory, "spikes.dat", sep = ""))
-	traces <- np$load(paste(data_directory, "traces_norm.npy", sep = ""))
-	norm_fits <- readRDS(paste(data_directory, "response_parametric_fits.RDS", sep=""))
+	traces <- np$load(paste(data_directory, "traces.npy", sep = ""))
 
     baseL_index <- calculate_baseline_index(spikes)
+#    baseL_index <- as.matrix(read.table(paste(data_directory, "baseL_index.dat", sep = "")))
     bl_quant <- quant_baseline_metrics(traces, baseL_index)
 
 
@@ -19,148 +21,159 @@ quant_baseline <- function(prefix){
 }
 
 
-source("constants.R")
-prefix <- prefix_list[1]
-data_directory <- paste(main_directory, prefix, "/suite2p/combined/", sep = "")
-bl_noise <- read.table(paste(data_directory, "baseline_noise.dat", sep = ""))$V1
-bl_f <- read.table(paste(data_directory, "baseline_fluor.dat", sep =""))$V1
-MI_dot <- read.table(paste(data_directory, "MI_grat.dat", sep = ""))[,1]
-norm_fits <- readRDS(paste(data_directory, "response_parametric_fits.RDS", sep=""))
-xy <- read.table(paste(data_directory, "xy.dat", sep = ""))
-z <- xy[,3]
+save_snr_hier_lin_reg <- function(prefix_list, model_name = "snr_hier_lm"){
 
-n_cells <- length(bl_noise)
-#fits <- norm_fits$dot_fits
-fits <- norm_fits$grat_fits
-signal <- rep(NA, n_cells)
+	# Load data
 
-for (i in 1 : n_cells){
-    signal[i] <- max(fits[1, i, ])
+	xy_bins_list<-vector("list",length(prefix_list))
+
+	MI_dot_list<-vector("list",length(prefix_list))
+	MI_grat_list<-vector("list",length(prefix_list))
+
+	MI_dot_thresh_list<-vector("list",length(prefix_list))
+	MI_grat_thresh_list<-vector("list",length(prefix_list))
+	MI_both_thresh_list<-vector("list",length(prefix_list))
+
+	NCC_thresh_list<-vector("list",length(prefix_list))
+
+    snr_list<-vector("list",length(prefix_list))
+
+	for(i in 1:length(prefix_list)){
+		prefix<-prefix_list[i]
+		data_directory<-paste(main_directory,prefix,"/suite2p/combined/",sep="")
+		
+		MI_dot_list[[i]]<-read.table(paste(data_directory,"MI_dot.dat",sep=""))[,1]
+		MI_grat_list[[i]]<-read.table(paste(data_directory,"MI_grat.dat",sep=""))[,1]
+		
+		MI_grat_thresh_list[[i]]<-read.table(paste(data_directory,"MI_grat_thresh.dat",sep=""))[,1]
+		MI_dot_thresh_list[[i]]<-read.table(paste(data_directory,"MI_dot_thresh.dat",sep=""))[,1]
+		MI_both_thresh_list[[i]]<-read.table(paste(data_directory,"MI_both_thresh.dat",sep=""))[,1]
+
+		NCC_thresh_list[[i]]<-read.table(paste(data_directory,"NCC_thresh.dat",sep=""))[,1]
+        baseline_noise<-read.table(paste(data_directory,"baseline_noise.dat",sep=""))[,1]
+        baseline_fluor<-read.table(paste(data_directory,"baseline_fluor.dat",sep=""))[,1]
+        snr_list[[i]]<-baseline_fluor / baseline_noise
+
+	}
+
+    # MI dot vs SNR
+
+	MI_dot <- mapply(function(MI,NCC) MI[NCC], MI_dot_list, NCC_thresh_list)
+	snr <- mapply(function(snr,NCC) snr[NCC], snr_list, NCC_thresh_list)
+
+	N_group <- length(prefix_list)
+	groups <- sapply(1:N_group, function(x) rep(x, length(MI_dot[[x]])))
+    groups <- unlist(groups)
+
+
+    MI_dot <- unlist(MI_dot)
+    snr <- unlist(snr)
+
+    thresh <- !is.na(snr)
+    MI_dot <- MI_dot[thresh]
+    snr <- snr[thresh]
+    groups <- groups[thresh]
+
+	N <- length(MI_dot)
+	snr_mean <- mean(snr)
+	snr_norm <- snr - snr_mean
+
+	# run hierarchical model on dot data
+	dat_dot <- list(N = N, Y = MI_dot, N_group = N_group, X = snr_norm, group = groups, X_mean = snr_mean)
+	writeLines(readLines("models/hier_lin_reg.stan"))
+	mod_fit_dot <- stan(file = "models/hier_lin_reg.stan", data = dat_dot, refresh = 150, iter = 5000, chains = 4)
+
+
+    # MI dot (intersection) vs SNR
+#	MI_dot_int <- mapply(function(MI,thresh,NCC) MI[thresh & NCC], MI_dot_list, MI_both_thresh_list, NCC_thresh_list)
+#	snr <- mapply(function(snr,thresh,NCC) snr[thresh & NCC], snr_list, MI_both_thresh_list, NCC_thresh_list)
+#
+#	N_group <- length(prefix_list)
+#	groups <- sapply(1:N_group, function(x) rep(x, length(MI_dot_int[[x]])))
+#    groups <- unlist(groups)
+#
+#
+#    MI_dot_int <- unlist(MI_dot_int)
+#    snr <- unlist(snr)
+#
+#    thresh <- !is.na(snr)
+#    MI_dot_int <- MI_dot_int[thresh]
+#    snr <- snr[thresh]
+#    groups <- groups[thresh]
+#
+#	N <- length(MI_dot_int)
+#	snr_mean <- mean(snr)
+#	snr_norm <- snr - snr_mean
+#
+#	# run hierarchical model on dot data
+#	dat_dot_int <- list(N = N, Y = MI_dot_int, N_group = N_group, X = snr_norm, group = groups, X_mean = snr_mean)
+#	writeLines(readLines("models/hier_lin_reg.stan"))
+#	mod_fit_dot_int <- stan(file = "models/hier_lin_reg.stan", data = dat_dot_int, refresh = 150, iter = 5000, chains = 4)
+	#5000 4
+
+
+    # MI grat vs SNR
+
+	MI_grat <- mapply(function(MI,thresh,NCC) MI[NCC], MI_grat_list, NCC_thresh_list)
+	snr <- mapply(function(snr,thresh,NCC) snr[NCC], snr_list, NCC_thresh_list)
+
+	N_group <- length(prefix_list)
+	groups <- sapply(1:N_group, function(x) rep(x, length(MI_grat[[x]])))
+    groups <- unlist(groups)
+
+
+    MI_grat <- unlist(MI_grat)
+    snr <- unlist(snr)
+
+    thresh <- !is.na(snr)
+    MI_grat <- MI_grat[thresh]
+    snr <- snr[thresh]
+    groups <- groups[thresh]
+
+	N <- length(MI_grat)
+	snr_mean <- mean(snr)
+	snr_norm <- snr - snr_mean
+
+	# run hierarchical model on grat data
+	dat_grat <- list(N = N, Y = MI_grat, N_group = N_group, X = snr_norm, group = groups, X_mean = snr_mean)
+	writeLines(readLines("models/hier_lin_reg.stan"))
+	mod_fit_grat <- stan(file = "models/hier_lin_reg.stan", data = dat_grat, refresh = 150, iter = 5000, chains = 4)
+
+
+    # MI grat (intersection) vs SNR
+#	MI_grat_int <- mapply(function(MI,thresh,NCC) MI[thresh & NCC], MI_grat_list, MI_both_thresh_list, NCC_thresh_list)
+#	snr <- mapply(function(snr,thresh,NCC) snr[thresh & NCC], snr_list, MI_both_thresh_list, NCC_thresh_list)
+#
+#	N_group <- length(prefix_list)
+#	groups <- sapply(1:N_group, function(x) rep(x, length(MI_grat_int[[x]])))
+#    groups <- unlist(groups)
+#
+#
+#    MI_grat_int <- unlist(MI_grat_int)
+#    snr <- unlist(snr)
+#
+#    thresh <- !is.na(snr)
+#    MI_grat_int <- MI_grat_int[thresh]
+#    snr <- snr[thresh]
+#    groups <- groups[thresh]
+#
+#	N <- length(MI_grat_int)
+#	snr_mean <- mean(snr)
+#	snr_norm <- snr - snr_mean
+#
+#	# run hierarchical model on grat data
+#	dat_grat_int <- list(N = N, Y = MI_grat_int, N_group = N_group, X = snr_norm, group = groups, X_mean = snr_mean)
+#	writeLines(readLines("models/hier_lin_reg.stan"))
+#	mod_fit_grat_int <- stan(file = "models/hier_lin_reg.stan", data = dat_grat_int, refresh = 150, iter = 5000, chains = 4)
+
+
+#	dat <- list(dot = dat_dot, dot_int = dat_dot_int, grat = dat_grat, grat_int = dat_grat_int)
+#	model_output <- list(dot = mod_fit_dot, dot_int = mod_fit_dot_int, grat = mod_fit_grat, grat_int = mod_fit_grat_int)
+
+	dat <- list(dot = dat_dot, grat = dat_grat)
+	model_output <- list(dot = mod_fit_dot, grat = mod_fit_grat)
+
+
+	saveRDS(model_output, paste(main_directory, "info_analysis/", model_name, ".RDS", sep = ""))
+	saveRDS(dat, paste(main_directory, "info_analysis/", model_name, "_dat.RDS", sep = ""))
 }
-
-snr_old <- signal / bl_noise
-snr_new <- bl_f / bl_noise
-
-X11();plot(log(MI_dot) ~ log(snr_new))
-
-cor(MI_dot, snr_new, use = "complete")
-plot(MI_dot ~ signal)
-plot(MI_dot ~ bl_noise)
-
-bl_norm <- (bl_noise - mean(bl_noise, na.rm = T)) / sd(bl_noise, na.rm = T)
-ind <- bl_norm < 3
-plot(MI_dot[ind] ~ bl_noise[ind])
-abline(lm(MI_dot[ind] ~ bl_noise[ind]))
-
-plot(signal ~ bl_noise)
-
-mod <- lm(MI_dot ~ snr)
-mod2 <- lm(signal ~ bl_noise)
-summary(lm(MI_dot ~ signal + bl_noise))
-plot(lm(MI_dot ~ bl_noise))
-
-response_var <- fits[2,,]
-response_mean <- fits[1,,]
-
-X11();plot(log(response_var) ~ log(response_mean))
-a = 4
-#plot(log(response_var[,a]) ~ log(response_mean[,a]))
-lm(log(response_var[,a]) ~ log(response_mean[,a]))
-mod3 <- lm(log(c(response_var)) ~ log(c(response_mean)))
-plot(mod3)
-
-
-
-
-alpha = rep(NA, n_cells)
-
-for (i in 1:n_cells){
-    alpha[i] = lm(log(response_var[i,]) ~ log(response_mean[i,]))$coefficients[2]
-}
-
-
-n_stim <- 4
-
-noise <- rexp(n = n_cells)
-mu <- rexp(n_cells * n_stim)
-sig <- rexp(n_cells * n_stim, rate = 3)
-
-mu <- matrix(mu, nrow = n_cells, ncol = n_stim) + noise
-
-# two separate things
-# 1. Are good recording conditions causing MI? - look at noise/baseline
-# 2. Are we missing some neurons that have significant mutual information but can#t detect due to noise? SNR?
-# because increase in signal can increase SNR and neurons with higher signal are more likely to have higher MI (possibly show with simulation)
-# then correlation might be expectee
-# 
-index <- c(fits[2,,]) > 0 & c(fits[1,,]) > 0
-means <- c(fits[1,,])[index]
-stds <- c(fits[2,,])[index]
-
-means_params = fitdistr(means,"gamma")
-hist(means, breaks = 100, freq = FALSE)
-curve(dgamma(x, shape = means_params$estimate[1], rate = means_params$estimate[2]), add = T, col = "red")
-
-pl_mod <- lm(log(stds) ~ log(means))
-pl_beta <- pl_mod$coefficients
-pl_sig <- summary(pl_mod)$sigma
-plot(log(stds) ~ log(means))
-abline(pl_mod, col = "red")
-
-
-#stds_params = fitdistr(stds, "gamma")
-#hist(stds, breaks = 100, freq = FALSE)
-#curve(dgamma(x, shape = stds_params$estimate[1], rate = stds_params$estimate[2]), add = T, col = "red")
-
-n_stim <- 4
-n_reps <- 10
-
-mu_mat <- matrix(nrow = n_cells, ncol = n_stim)
-sd_mat <- matrix(nrow = n_cells, ncol = n_stim)
-
-signal_vec <- rep(NA, n_cells)
-MI_vec <-rep(NA, n_cells)
-cor_vec <- rep(NA, 100)
-
-for (j in 1: 100){
-    for (i in 1 : n_cells){
-
-        resp_mat <- matrix(nrow = n_reps, ncol = n_stim)
-    #    mu <- rep(NA, n_stim)
-    #    sd <- rep(1, n_stim)
-
-        mu_mat[i, ] <- rgamma(n = 4, shape = means_params$estimate[1], rate = means_params$estimate[2])
-        sd_mat[i, ] <- exp(rnorm(n = 4, mean = pl_beta[[1]] + log(mu_mat[i, ]) * pl_beta[[2]], sd = pl_sig))
-    #    sd_mat[i, ] <- exp(rnorm(n = 4, mean = log(mu_mat[i, ]) * 2, sd = 0.0001))
-
-        prob <- cbind(mu_mat[i,], sd_mat[i, ])
-        MI_val <- MI(prob)
-
-        signal_vec[i] <- max(mu_mat[i, ])
-        MI_vec[i] <- MI_val
-    }
-
-    cor_vec[j] <- cor(signal_vec, MI_vec)
-}
-
-plot(MI_vec ~ signal_vec)
-plot(signal ~ signal_vec)
-plot(log(c(sd_mat)) ~ log(c(mu_mat)), col = rgb(0, 0, 0, 0.1), pch = 19)
-lines(log(stds) ~ log(means), col = rgb(1, 0, 0, 0.1), type = "p")
-plot(log(bl_noise) ~ log(signal))
-lm(log())
-
-hist(means, freq = FALSE, breaks = 100)
-hist(c(mu_mat), freq = FALSE, breaks = 100, add = T, col = rgb(0, 0, 1, 0.5))
-
-hist(stds, freq = FALSE, breaks = 100)
-hist(c(sd_mat), freq = FALSE, breaks = 100, add = T, col = rgb(0, 0, 1, 0.5))
-
-hist(signal, freq = FALSE, breaks = 100)
-hist(signal_vec, freq = FALSE, breaks = 100, add = T, col = rgb(0, 0, 1, 0.5))
-
-mod <- lm(MI_dot ~ bl_f + bl_noise + z)
-X11()
-plot(mod)
-X11()
-plot(MI_dot ~ z)

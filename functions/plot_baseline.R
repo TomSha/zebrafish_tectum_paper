@@ -10,6 +10,7 @@ NCC_thresh_list<-vector("list",length(prefix_list))
 
 baseline_noise_list <- vector("list", length(prefix_list))
 baseline_fluor_list <- vector("list", length(prefix_list))
+snr_list <- vector("list", length(prefix_list))
 
 for(i in 1:length(prefix_list)){
 	print(i)
@@ -26,9 +27,11 @@ for(i in 1:length(prefix_list)){
 
     baseline_noise_list[[i]]<-read.table(paste(data_directory,"baseline_noise.dat",sep=""))[,1]
     baseline_fluor_list[[i]]<-read.table(paste(data_directory,"baseline_fluor.dat",sep=""))[,1]
-
+    snr_list[[i]]<-baseline_fluor_list[[i]] / baseline_noise_list[[i]]
 
 }
+
+
 
 
 
@@ -58,15 +61,17 @@ plot_fluor_vs_dot_MI <- function(i, thresh = TRUE){
    plot(fluor, MI, pch = 19, col = rgb(0, 0, 0, 0.3)) 
    }
 
-par(mfrow = c(2, 5))
-for(i in 1:9){
-    plot_fluor_vs_MI(i)
-}
+plot_snr_vs_dot_MI <- function(i, thresh = TRUE){
 
-par(mfrow = c(2, 5))
-for(i in 1:9){
-    plot_noise_vs_MI(i)
-}
+    if(thresh){
+        MI <- MI_dot_list[[i]][MI_dot_thresh_list[[i]] & NCC_thresh_list[[i]]]
+        snr <- snr_list[[i]][MI_dot_thresh_list[[i]] & NCC_thresh_list[[i]]]
+    }else{
+        MI <- MI_dot_list[[i]]
+        snr <- snr_list[[i]]
+    }
+   plot(MI ~ snr, pch = 19, col = rgb(0, 0, 0, 0.3)) 
+   }
 
 plot_noise_vs_grat_MI <- function(i, thresh = TRUE){
 
@@ -93,16 +98,6 @@ plot_fluor_vs_grat_MI <- function(i, thresh = TRUE){
     }
    plot(fluor, MI, pch = 19, col = rgb(0, 0, 0, 0.3)) 
    }
-
-#par(mfrow = c(2, 5))
-#for(i in 1:9){
-#    plot_fluor_vs_grat_MI(i)
-#}
-#
-#par(mfrow = c(2, 5))
-#for(i in 1:9){
-#    plot_noise_vs_grat_MI(i)
-#}
 
 
 plot_basline_func <- function(i){
