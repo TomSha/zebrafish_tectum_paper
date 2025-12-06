@@ -1,6 +1,6 @@
 library(rstan)
 
-save_hier_lin_reg <- function(prefix_list){
+save_hier_lin_reg <- function(prefix_list, model_name = "lin_reg0"){
 
 	# Load data
 
@@ -37,7 +37,8 @@ save_hier_lin_reg <- function(prefix_list){
 
 	}
 
-	AP_bias <- readRDS(paste(main_directory, "info_analysis/ant_post_bias_subtype.RDS", sep = ""))
+	# 0 at the end!
+	AP_bias <- readRDS(paste(main_directory, "info_analysis/ant_post_bias_subtype0.RDS", sep = ""))
 
 
 	# Get the average MI per subtype 
@@ -49,7 +50,8 @@ save_hier_lin_reg <- function(prefix_list){
 	MI_dot <- t(MI_dot[,inc])
 	MI_dot <- c(MI_dot)
 
-	AP_dot_bias <- t(AP_bias$dot[,inc])
+#	AP_dot_bias <- t(AP_bias$dot[,inc])
+	AP_dot_bias <- t(AP_bias$dot)
 	AP_dot_bias <- c(AP_dot_bias)
 
 	N_group <- length(prefix_list)
@@ -77,7 +79,8 @@ save_hier_lin_reg <- function(prefix_list){
 	MI_grat <- t(MI_grat[,inc])
 	MI_grat <- c(MI_grat)
 
-	AP_grat_bias <- t(AP_bias$grat[,inc])
+#	AP_grat_bias <- t(AP_bias$grat[,inc])
+	AP_grat_bias <- t(AP_bias$grat)
 	AP_grat_bias <- c(AP_grat_bias)
 
 	N_group <- length(prefix_list)
