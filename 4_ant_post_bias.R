@@ -103,7 +103,7 @@ AP_bias <- function(prefix_list){
 		dir.create(paste(main_directory,"info_analysis/",sep=""))
 	}
 
-#	saveRDS(model_output,paste(main_directory,"info_analysis/multi_model.RDS",sep=""))
+	saveRDS(model_output,paste(main_directory,"info_analysis/multi_model.RDS",sep=""))
 	saveRDS(dat, paste(main_directory,"info_analysis/multi_model_dat.RDS",sep=""))
 	saveRDS(AP_bias, paste(main_directory,"info_analysis/ant_post_bias_all.RDS",sep=""))
 }

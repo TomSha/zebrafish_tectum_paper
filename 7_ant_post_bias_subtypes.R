@@ -43,6 +43,7 @@ AP_bias_subtypes <- function(prefix_list){
 	dot_count <- mapply(norm_cell_num, xy_bins_list, MI_dot_thresh_list, NCC_thresh_list, dot_model_n_list, SIMPLIFY = F)
 	dot_count <- simplify2array(dot_count)
 	dot_count <- aperm(dot_count, c(1, 3, 2))
+	dot_count <- dot_count[, , inc]
 	
 	sample_size <- apply(dot_count, c(2, 3), sum)
 	n_exp <- dim(dot_count)[2]
@@ -56,6 +57,7 @@ AP_bias_subtypes <- function(prefix_list){
 	grat_count <- mapply(norm_cell_num, xy_bins_list, MI_grat_thresh_list, NCC_thresh_list, grat_model_n_list, SIMPLIFY = F)
 	grat_count <- simplify2array(grat_count)
 	grat_count <- aperm(grat_count, c(1, 3, 2))
+	grat_count <- grat_count[, , inc]
 
 	sample_size <- apply(grat_count, c(2, 3), sum)
 	n_exp <- dim(grat_count)[2]
@@ -64,24 +66,26 @@ AP_bias_subtypes <- function(prefix_list){
 	dat_grat <- list(bins_count = grat_count, sample_size = sample_size, n_exp = n_exp, n_bin = n_bin, n_marg = n_marg)
 
 	# run multinomial model
-	model_output_dot <- run_multi_model(dat_dot)
-	model_output_grat <- run_multi_model(dat_grat)
+	model_output_dot <- run_multi_model_subtype(dat_dot)
+	model_output_grat <- run_multi_model_subtype(dat_grat)
 	
 	model_output <- list(dot = model_output_dot, grat = model_output_grat)
 
 	dat <- list(dot = dat_dot, grat = dat_grat)
 
-	AP_bias <- calculate_AP_bias(model_output)
+	AP_bias <- calculate_AP_bias_subtype(model_output)
 
 	if(!dir.exists(paste(main_directory,"info_analysis/",sep=""))){
 		dir.create(paste(main_directory,"info_analysis/",sep=""))
 	}
 
-	saveRDS(model_output,paste(main_directory,"info_analysis/multi_model_subtype.RDS",sep=""))
-	saveRDS(dat,paste(main_directory,"info_analysis/multi_model_subtype_dat.RDS",sep=""))
-	saveRDS(AP_bias, paste(main_directory,"info_analysis/ant_post_bias_subtype.RDS",sep=""))
+# 0 ON THE END!!!
+	saveRDS(model_output,paste(main_directory,"info_analysis/multi_model_subtype0.RDS",sep=""))
+	saveRDS(dat,paste(main_directory,"info_analysis/multi_model_subtype_dat0.RDS",sep=""))
+	saveRDS(AP_bias, paste(main_directory,"info_analysis/ant_post_bias_subtype0.RDS",sep=""))
 
 }
+
 
 
 

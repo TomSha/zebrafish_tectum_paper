@@ -127,7 +127,7 @@ calculate_AP_bias <- function(model_output){
 	stim_names <- names(p)
 
 	# calculate the MAP estimate for each bin along the AP axis for every fish and subtype
-	map_p <- lapply(p, function(x) apply(x, c(1, 2, 3), map_estimate))
+	map_p <- lapply(p, function(x) apply(x, c(1, 2, 3), mean))
 
 	# sum the prob. mass for the anterior tectum (bins 1:5) and posterior tectum (bins 6:10) and calc the difference
 	diff_prob <- vector("list", n_stim)
@@ -143,3 +143,26 @@ calculate_AP_bias <- function(model_output){
 	return(diff_prob)
 }
 
+
+calculate_AP_bias_subtype <- function(model_output){
+
+	p <- lapply(model_output, "[[", "p")
+	n_stim <- length(model_output)
+	stim_names <- names(p)
+
+	# calculate the MAP estimate for each bin along the AP axis for every fish and subtype
+#	map_p <- lapply(p, function(x) apply(x, c(1, 2, 3), mean))
+
+	# sum the prob. mass for the anterior tectum (bins 1:5) and posterior tectum (bins 6:10) and calc the difference
+	diff_prob <- vector("list", n_stim)
+	names(diff_prob) <- stim_names
+
+	for(i in 1 : n_stim){
+		stim <- p[[i]]
+		ant_prob <- apply(stim, c(2, 3, 4, 5), function(x) sum(x[1 : 5]))
+		post_prob <- apply(stim, c(2, 3, 4, 5), function(x) sum(x[6 : 10]))
+		diff_prob[[i]] <- ant_prob - post_prob
+	}
+	
+	return(diff_prob)
+}
