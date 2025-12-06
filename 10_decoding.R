@@ -331,18 +331,18 @@ plot_fig <- function(fish = 7, neuron = 1, S_letter = 3, S_lab = 2, S_axis = 2, 
 				S_lab = S_lab, S_axis = S_axis, S_leg = S_leg, S_pnts = S_pnts, L1 = L1, L2 = L2)
 	title(main="C)",adj=0,cex.main=S_letter)
 
-	plot_location_v_performance(xy_r_projection_list[[fish]], dot_decoded_correct_list[[fish]], grat_decoded_correct_list[[fish]], k = 1, main_t = "single neuron decoding", S_lab = S_lab, S_axis = S_axis, S_main = S_main, S_pnts = S_pnts, L2 = L2)
+	plot_location_v_performance(xy_r_projection_list[[fish]], dot_decoded_correct_list[[fish]], grat_decoded_correct_list[[fish]], k = 1, main_t = "single neuron decoding", S_lab = S_lab, S_axis = S_axis, S_main = S_main, S_pnts = S_pnts, L2 = L2, L1 = L1)
 	title(main="D)",adj=0,cex.main=S_letter)
-	plot_location_v_performance(xy_r_projection_list[[fish]], dot_decoded_correct_list[[fish]], grat_decoded_correct_list[[fish]], k = 10, main_t = "10 neurons/assembly", S_lab = S_lab, S_axis = S_axis, S_main = S_main, S_pnts = S_pnts, L2 = L2)
+	plot_location_v_performance(xy_r_projection_list[[fish]], dot_decoded_correct_list[[fish]], grat_decoded_correct_list[[fish]], k = 10, main_t = "10 neurons/assembly", S_lab = S_lab, S_axis = S_axis, S_main = S_main, S_pnts = S_pnts, L2 = L2, L1 = L1)
 	title(main="E)",adj=0,cex.main=S_letter)
-	plot_location_v_performance(xy_r_projection_list[[fish]], dot_decoded_correct_list[[fish]], grat_decoded_correct_list[[fish]], k = 20, main_t = "20 neurons/assembly", S_lab = S_lab, S_axis = S_axis, S_main = S_main, S_pnts = S_pnts, L2 = L2)
+	plot_location_v_performance(xy_r_projection_list[[fish]], dot_decoded_correct_list[[fish]], grat_decoded_correct_list[[fish]], k = 20, main_t = "20 neurons/assembly", S_lab = S_lab, S_axis = S_axis, S_main = S_main, S_pnts = S_pnts, L2 = L2, L1 = L1)
 	title(main="F)",adj=0,cex.main=S_letter)
 
-	plot_average_regression(xy_r_projection_list, dot_decoded_correct_list, grat_decoded_correct_list, 1, S_lab = S_lab, S_axis = S_axis, S_leg = S_leg, L2 = L2)
+	plot_average_regression(xy_r_projection_list, dot_decoded_correct_list, grat_decoded_correct_list, 1, S_lab = S_lab, S_axis = S_axis, S_leg = S_leg, L2 = L2, L1 = L1)
 	title(main="G)",adj=0,cex.main=S_letter)
-	plot_average_regression(xy_r_projection_list, dot_decoded_correct_list, grat_decoded_correct_list, 10, S_lab = S_lab, S_axis = S_axis, S_leg = S_leg, L2 = L2)
+	plot_average_regression(xy_r_projection_list, dot_decoded_correct_list, grat_decoded_correct_list, 10, S_lab = S_lab, S_axis = S_axis, S_leg = S_leg, L2 = L2, L1 = L1)
 	title(main="H)",adj=0,cex.main=S_letter)
-	plot_average_regression(xy_r_projection_list, dot_decoded_correct_list, grat_decoded_correct_list, 40, S_lab = S_lab, S_axis = S_axis, S_leg = S_leg, L2 = L2)
+	plot_average_regression(xy_r_projection_list, dot_decoded_correct_list, grat_decoded_correct_list, 40, S_lab = S_lab, S_axis = S_axis, S_leg = S_leg, L2 = L2, L1 = L1)
 	title(main="I)",adj=0,cex.main=S_letter)
 
 }
@@ -369,12 +369,12 @@ user<-Sys.info()[names(Sys.info())=="user"]
 save_direc<-paste("/media/",user,"/Samsung_T5/Work/tectal_subdomain_paper/paper_figs/",sep="")
 #png(paste(save_direc, "fig_11.png", sep = ""), width = 1500, height = 1000)
 
-tiff(paste(save_direc, "fig_11.tiff", sep = ""), unit = "cm", width = 17, height = 11.3, res = 300)
-plot_fig(2,20, S_letter = 1, S_lab = 0.5, S_axis = 0.7, S_main = 0.8, S_leg = 0.7, S_pnts = 0.4, L1 = 0.5, L2 = 1)
+tiff(paste(save_direc, "fig_12.tiff", sep = ""), unit = "cm", width = 17, height = 11.3, res = 300)
+plot_fig(2,20, S_letter = 1, S_lab = 0.5, S_axis = 0.7, S_main = 0.8, S_leg = 0.7, S_pnts = 0.4, L1 = 0.25, L2 = 1)
 dev.off()
 
 #png(paste(save_direc, "fig_11b.png", sep = ""), width = 1500, height = 1000/3)
-tiff(paste(save_direc, "fig_11b.tiff", sep = ""), unit = "cm", width = 17, height = 4.5, res = 300)
+tiff(paste(save_direc, "fig_12b.tiff", sep = ""), unit = "cm", width = 17, height = 4.5, res = 300)
 plot_fig_stim(S_letter = 1, S_lab = 0.5, S_axis = 0.7, S_main = 0.8, S_leg = 0.7, S_pnts = 0.3, L1 = 0.5, L2 = 1)
 dev.off()
 
